@@ -1,0 +1,10 @@
+#文件
+/LOUnitySQLite/Assembly-CSharp-vs.csproj
+/LOUnitySQLite/Assembly-CSharp.csproj
+/LOUnitySQLite/LOUnitySQLite-csharp.sln
+/LOUnitySQLite/LOUnitySQLite.sln
+/LOUnitySQLite/LOUnitySQLite.userprefs
+# 文件夹
+/LOUnitySQLite/Library/
+/LOUnitySQLite/obj/
+/LOUnitySQLite/Temp/
