@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>LOUnitySQLite by applexiaohao</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">LOUnitySQLite</h1>
+      <h2 class="project-tagline"></h2>
+      <a href="https://github.com/applexiaohao/LOUnitySQLite" class="btn">View on GitHub</a>
+      <a href="https://github.com/applexiaohao/LOUnitySQLite/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/applexiaohao/LOUnitySQLite/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="sqlite数据库-unity操作" class="anchor" href="#sqlite%E6%95%B0%E6%8D%AE%E5%BA%93-unity%E6%93%8D%E4%BD%9C" aria-hidden="true"><span class="octicon octicon-link"></span></a>SQLite数据库-Unity操作</h1>
+
+<p><strong>项目开发的时候，经常会遇到的一种需求，数据存储</strong></p>
+
+<p>离线缓存的数据类型很多，大致分成两类</p>
+
+<ul>
+<li>字符串文本数据</li>
+<li>多媒体数据</li>
+</ul>
+
+<p>字符串数据的类型只有字符串，但是结构有很多:</p>
+
+<ul>
+<li> xml</li>
+<li>json</li>
+<li>md5</li>
+<li>base64</li>
+<li> 普通字符串</li>
+</ul>
+
+<p>多媒体数据的类型:</p>
+
+<ul>
+<li>图片(jpg,png,gif...)</li>
+<li>音频(mp3,aif...)</li>
+<li>视频(mp4,mpv)</li>
+</ul>
+
+<p><em>通常用数据库来存储字符串文本类型的数据，但是需要注意的是数据库同时也能存储多媒体类型的数据</em></p>
+
+<hr>
+
+<p><strong>关系数据库</strong>
+在一个给定的应用领域中，所有实体及实体之间联系的集合构成一个关系数据库。
+目前主流的关系数据库有oracle、db2、sqlserver、sybase、mysql等。</p>
+
+<p><strong>在Unity中打开数据库函数</strong></p>
+
+<pre><code>    private string GetDBPath(string name)
+    {
+        return Application.persistentDataPath + "/" + name + ".sqlite";
+    }
+
+    /// &lt;summary&gt;
+    /// 就是用来存储程序与数据库链接的对象
+    /// &lt;/summary&gt;
+    private SqliteConnection connection = null;
+    private void OpenDataBase()
+    {
+        //获取一个数据库文件的路径
+        string path = GetDBPath ("xiaohao");
+        string c = "Data Source=" + path;
+        //需要通过数据库文件磁盘路径进行初始化
+        connection = new SqliteConnection (c);
+        //打开数据库
+        connection.Open();
+    }
+</code></pre>
+
+<h2>
+<a id="crud" class="anchor" href="#crud" aria-hidden="true"><span class="octicon octicon-link"></span></a>CRUD</h2>
+
+<hr>
+
+<p><strong>创建表格SQL</strong></p>
+
+<pre><code>create table lo_human(human_id integer,human_name text,human_age integer);
+</code></pre>
+
+<p><strong>C#函数调用创建表格SQL</strong></p>
+
+<pre><code>    private void CreateObject()
+    {
+        //在一个数据库链接对象上创建一个命令对象
+        SqliteCommand command = new SqliteCommand(connection);
+
+        //给命令对象添加SQL语句
+        command.CommandText = "create table if not exists lo_human(human_id integer,human_name text,human_age integer);";
+
+        //执行命令
+        command.ExecuteNonQuery();
+    }
+</code></pre>
+
+<hr>
+
+<p><strong>添加数据</strong></p>
+
+<pre><code>insert into lo_human(human_id,human_name,human_age) values(1,'xiaohao',36);
+</code></pre>
+
+<p><strong>C#函数调用添加数据SQL</strong></p>
+
+<pre><code>    private void InsertObject()
+    {
+        //在一个数据库链接对象上创建一个命令对象
+        SqliteCommand command = new SqliteCommand (connection);
+
+        //给命令对象添加SQL语句
+        command.CommandText = "insert into lo_human(human_id,human_name,human_age) values(1,'xiaohao',36);";
+
+        //执行命令
+        command.ExecuteNonQuery ();
+    }
+</code></pre>
+
+<hr>
+
+<p><strong>更新数据</strong></p>
+
+<pre><code>update lo_human set human_name='cuiyayun' where human_id=2;
+</code></pre>
+
+<p><strong>C#函数调用更新数据SQL</strong></p>
+
+<pre><code>    private void UpdateObject()
+    {
+        //在一个数据库链接对象上创建一个命令对象
+        SqliteCommand command = new SqliteCommand (connection);
+
+        //给命令对象添加SQL语句
+        command.CommandText = "update lo_human set human_name='cuiyayun' where human_id=3;";
+
+        //执行命令
+        command.ExecuteNonQuery ();
+    }
+</code></pre>
+
+<hr>
+
+<p><strong>删除数据</strong></p>
+
+<pre><code>delete from lo_human where humanid=1;
+</code></pre>
+
+<p><strong>C#函数调用删除数据SQL</strong></p>
+
+<pre><code>    private void DeleteObject()
+    {
+        //在一个数据库链接对象上创建一个命令对象
+        SqliteCommand command = new SqliteCommand (connection);
+
+        //给命令对象添加SQL语句
+        command.CommandText = "delete from lo_human where human_id=1;";
+
+        //执行命令
+        command.ExecuteNonQuery ();
+    }
+</code></pre>
+
+<hr>
+
+<p><strong>查询数据</strong></p>
+
+<pre><code>select * from lo_human where human_id&gt;15 order by human_id desc;
+</code></pre>
+
+<p><strong>C#函数调用查询数据SQL</strong></p>
+
+<pre><code>    private void SelectObject()
+    {
+        //在一个数据库链接对象上创建一个命令对象
+        SqliteCommand command = new SqliteCommand (connection);
+
+        //给命令对象添加SQL语句
+        command.CommandText = "select * from lo_human where human_id&gt;15 order by human_id desc;";
+
+        //数据读取器
+        SqliteDataReader reader = command.ExecuteReader();
+
+        //判读是否可以读取下一行数据,如果可以的话就获取数据
+        while (reader.Read())
+        {
+            //在循环体里,已经确定是哪行数据.
+            Debug.Log(reader ["human_name"]);
+        }
+    }
+</code></pre>
+
+<hr>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/applexiaohao/LOUnitySQLite">LOUnitySQLite</a> is maintained by <a href="https://github.com/applexiaohao">applexiaohao</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
