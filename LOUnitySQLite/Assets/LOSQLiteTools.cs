@@ -1,10 +1,6 @@
 ﻿using System;
 using UnityEngine;
-
-//反射机制应用到的库
 using System.Reflection;
-
-//SQLite应用到的库
 using System.Data;
 using Mono.Data.Sqlite;
 
@@ -29,7 +25,9 @@ namespace AssemblyCSharp
 		public string Name{set;get;}
 	}
 
-
+	/// <summary>
+	/// SQL框架用到的接口
+	/// </summary>
 	public interface SQLInterface{
 
 		int sql_id{ set;get; }
@@ -38,13 +36,12 @@ namespace AssemblyCSharp
 		string GetFields();
 
 		string InsertSQL{ get;}
-//		string UpdateSQL{ get;}
+		string UpdateSQL{ get;}
 //		string DeleteSQL{ get;}
 	}
-
-
+		
 	/// <summary>
-	/// 测试功能用到的类
+	/// SQL框架用到的基类
 	/// </summary>
 	public class SQLObject:SQLInterface
 	{
@@ -110,6 +107,43 @@ namespace AssemblyCSharp
 				return sql;
 			}
 		}
+
+		//update lo_human set human_name='cuiyayun' where human_id=2;
+		public string UpdateSQL{
+			get{ 
+				//sql命令的开始部分的字符串
+				string sql = "update " + LOSQLiteTools.GetTableName (this.GetType ());
+				sql += " set ";
+
+				//获取到所有的属性
+				PropertyInfo[] p_list = this.GetType ().GetProperties ();
+
+				//添加每个值的修改过程
+				foreach (PropertyInfo item in p_list) 
+				{
+					string name = LOSQLiteTools.GetFieldName (item);
+
+					if (name == null) {
+						continue;
+					}
+
+					string value = item.GetValue (this, null).ToString ();
+
+					sql += name + "='" + value + "',";
+				}
+
+				//删除掉一个,
+				sql = sql.Substring (0, sql.Length - 1);
+
+				//添加一个空格
+				sql += " ";
+
+				//添加谓词判断条件
+				sql += "where sql_id='" + this.sql_id.ToString () + "';";
+
+				return sql;
+			}
+		}
 	}
 
 	[SQLTable(Name="test_class")]
@@ -121,6 +155,8 @@ namespace AssemblyCSharp
 		[SQLField(Name="test_age",Type="integer")]
 		public int		test_age{ set; get;}
 	}
+
+
 	public class LOSQLiteTools
 	{
 		//静态数据库链接对象
@@ -309,6 +345,23 @@ namespace AssemblyCSharp
 
 			return true;
 		}
+
+		/// <summary>
+		/// 更新数据库对象
+		/// </summary>
+		public static bool UpdateEntity(SQLObject sender)
+		{
+			if (!HasAttribute(sender.GetType())) {
+				return false;
+			}
+
+			Debug.Log (sender.UpdateSQL);
+
+			SqliteCommand command = new SqliteCommand (connection);
+			command.CommandText = sender.UpdateSQL;
+			command.ExecuteNonQuery ();
+
+			return true;
+		}
 	}
 }
-
