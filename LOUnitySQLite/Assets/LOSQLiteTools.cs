@@ -10,6 +10,7 @@ using Mono.Data.Sqlite;
 
 namespace AssemblyCSharp
 {
+
 	[AttributeUsage(AttributeTargets.Property)]
 	public class SQLFieldAttribute:Attribute
 	{
@@ -29,25 +30,97 @@ namespace AssemblyCSharp
 	}
 
 
+	public interface SQLInterface{
+
+		int sql_id{ set;get; }
+
+		string GetValues();
+		string GetFields();
+
+		string InsertSQL{ get;}
+//		string UpdateSQL{ get;}
+//		string DeleteSQL{ get;}
+	}
+
+
 	/// <summary>
 	/// 测试功能用到的类
 	/// </summary>
-	[SQLTable(Name="test_class")]
-	public class TestClass
+	public class SQLObject:SQLInterface
 	{
+		[SQLField(Name="sql_id",Type="integer",AutoIncrement=true,IsPrimaryKey=true)]
+		public int sql_id{ set; get;}
 
-		[SQLField(Name="test_id",Type="integer",AutoIncrement=true,IsNotNull=true,IsPrimaryKey=true)]
-		public int 		test_id{set;get;}
+		public SQLObject(){}
 
+		public string GetValues()
+		{
+			PropertyInfo[] p_list = this.GetType().GetProperties ();
+
+			string values = "(";
+
+			foreach (PropertyInfo item in p_list) 
+			{
+				string name = LOSQLiteTools.GetFieldName (item);
+				if (name == null) {
+					continue;
+				}
+
+				values += "'" + item.GetValue (this, null).ToString () + "',";
+			}
+
+			values = values.Substring (0, values.Length - 1);
+
+			values += ")";
+
+			return values;
+		}
+
+		public string GetFields()
+		{
+			PropertyInfo[] p_list = this.GetType().GetProperties ();
+
+			string fields = "(";
+
+			foreach (PropertyInfo item in p_list) 
+			{	
+				string name = LOSQLiteTools.GetFieldName (item);
+				if (name == null) {
+					continue;
+				}
+				fields += name + ",";
+			}
+
+
+			fields = fields.Substring (0, fields.Length - 1);
+
+			fields += ")";
+
+			return fields;
+		}
+
+
+		public string InsertSQL{
+			get{ 
+				string sql = "insert into ";
+				sql += LOSQLiteTools.GetTableName(this.GetType());
+				sql += this.GetFields() + " ";
+				sql += "values";
+				sql += this.GetValues () + ";";
+				return sql;
+			}
+		}
+	}
+
+	[SQLTable(Name="test_class")]
+	public class TestClass:SQLObject
+	{
 		[SQLField(Name="test_name",Type="text")]
 		public string 	test_name{set;get;}
 
 		[SQLField(Name="test_age",Type="integer")]
 		public int		test_age{ set; get;}
-
-		public TestClass(){}
 	}
-
 	public class LOSQLiteTools
 	{
 		//静态数据库链接对象
@@ -75,7 +148,7 @@ namespace AssemblyCSharp
 		/// 获取表格的名称
 		/// </summary>
 		/// <returns>The table name.</returns>
-		private static string GetTableName(Type item)
+		public static string GetTableName(Type item)
 		{
 			//获取到特性类型
 			Type att_type = typeof(SQLTableAttribute);
@@ -98,7 +171,7 @@ namespace AssemblyCSharp
 		/// <summary>
 		/// 获取属性在Field中的名字
 		/// </summary>
-		private static string GetFieldName(PropertyInfo item)
+		public static string GetFieldName(PropertyInfo item)
 		{
 			Type att_type = typeof(SQLFieldAttribute);
 
@@ -184,6 +257,10 @@ namespace AssemblyCSharp
 
 			foreach (PropertyInfo item in p_list) 
 			{
+				string fieldstring = GetFieldString (item);
+				if (fieldstring == null) {
+					continue;
+				}
 				//对应的属性区域
 				field_list += GetFieldString(item) + ",";
 			}
@@ -197,13 +274,40 @@ namespace AssemblyCSharp
 			string sql = "create table if not exists ";
 			sql += table_name + field_list + ";";
 
-			Debug.Log (sql);
-
 			SqliteCommand command = new SqliteCommand (connection);
 
 			command.CommandText = sql;
 
 			command.ExecuteNonQuery ();
+		}
+
+		/// <summary>
+		/// 判断一个类型是否包含Table特性
+		/// </summary>
+		private static bool HasAttribute(Type item)
+		{
+			Type att_type = typeof(SQLTableAttribute);
+
+			Attribute a = Attribute.GetCustomAttribute (item, att_type);
+
+			return a != null;
+		}
+
+		/// <summary>
+		/// 添加具有SQLTable特性的对象数据
+		/// </summary>
+		public static bool InsertEntity(SQLObject sender)
+		{
+			if (!HasAttribute(sender.GetType())) 
+			{
+				return false;
+			}
+				
+			SqliteCommand command = new SqliteCommand (connection);
+			command.CommandText = sender.InsertSQL;
+			command.ExecuteNonQuery ();
+
+			return true;
 		}
 	}
 }

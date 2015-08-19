@@ -115,9 +115,16 @@ public class RX_SqliteScript : MonoBehaviour {
 	void Start ()
 	{
 		//打开数据库
-		LOSQLiteTools.OpenDB("good");
+		LOSQLiteTools.OpenDB("yihuiyun");
 		//调用函数..
 		LOSQLiteTools.CreateTable (typeof(TestClass));
+
+		TestClass testObject = new TestClass ();
+		testObject.sql_id = 2;
+		testObject.test_name = @"lanou";
+		testObject.test_age = 34;
+
+		LOSQLiteTools.InsertEntity (testObject);
 	}
 	
 	// Update is called once per frame
