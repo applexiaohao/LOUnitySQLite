@@ -13,6 +13,13 @@ public class RX_SqliteScript : MonoBehaviour {
 	{
 		[SQLField(Name="stu_name",Type="text")]
 		public string stu_name{ set; get;}
+
+		public Student(){}
+
+		public override string ToString ()
+		{
+			return string.Format ("[Student: stu_name={0}]", stu_name);
+		}
 	}
 		
 	// Use this for initialization
@@ -20,15 +27,14 @@ public class RX_SqliteScript : MonoBehaviour {
 	{
 		//打开数据库
 		LOSQLiteTools.OpenDB("yihuiyun");
-		//调用函数..
-		LOSQLiteTools.CreateTable (typeof(TestClass));
-		LOSQLiteTools.CreateTable (typeof(Student));
 
-		Student stu = new Student ();
-		stu.sql_id = 0;
-		stu.stu_name = "易荟云";
 
-		LOSQLiteTools.UpdateEntity (stu);
+		SQLObject[] list = LOSQLiteTools.SelectEntity (typeof(Student));
+
+		foreach (SQLObject item in list) 
+		{
+			Debug.Log (item.ToString());
+		}
 	}
 	
 	// Update is called once per frame

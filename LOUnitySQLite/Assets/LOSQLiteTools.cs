@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Reflection;
 using System.Data;
 using Mono.Data.Sqlite;
+using System.Collections.Generic;
 
 namespace AssemblyCSharp
 {
@@ -37,7 +38,7 @@ namespace AssemblyCSharp
 
 		string InsertSQL{ get;}
 		string UpdateSQL{ get;}
-//		string DeleteSQL{ get;}
+		string DeleteSQL{ get;}
 	}
 		
 	/// <summary>
@@ -59,7 +60,7 @@ namespace AssemblyCSharp
 			foreach (PropertyInfo item in p_list) 
 			{
 				string name = LOSQLiteTools.GetFieldName (item);
-				if (name == null) {
+				if (name == null || name.Equals("sql_id")) {
 					continue;
 				}
 
@@ -82,7 +83,7 @@ namespace AssemblyCSharp
 			foreach (PropertyInfo item in p_list) 
 			{	
 				string name = LOSQLiteTools.GetFieldName (item);
-				if (name == null) {
+				if (name == null  ||  name.Equals("sql_id")) {
 					continue;
 				}
 				fields += name + ",";
@@ -140,6 +141,19 @@ namespace AssemblyCSharp
 
 				//添加谓词判断条件
 				sql += "where sql_id='" + this.sql_id.ToString () + "';";
+
+				return sql;
+			}
+		}
+
+		public string DeleteSQL{
+			get{ 
+				
+				//sql命令的开始部分的字符串
+				string sql = "delete from " + LOSQLiteTools.GetTableName (this.GetType ());
+
+				//添加谓词判断条件
+				sql += " where sql_id='" + this.sql_id.ToString () + "';";
 
 				return sql;
 			}
@@ -354,14 +368,65 @@ namespace AssemblyCSharp
 			if (!HasAttribute(sender.GetType())) {
 				return false;
 			}
-
-			Debug.Log (sender.UpdateSQL);
-
+				
 			SqliteCommand command = new SqliteCommand (connection);
 			command.CommandText = sender.UpdateSQL;
 			command.ExecuteNonQuery ();
 
 			return true;
+		}
+
+		public static bool DeleteEntity(SQLObject sender)
+		{
+			if (!HasAttribute(sender.GetType())) {
+				return false;
+			}
+
+			SqliteCommand command = new SqliteCommand (connection);
+			command.CommandText = sender.DeleteSQL;
+			command.ExecuteNonQuery ();
+
+			return true;
+		}
+
+		public static SQLObject[] SelectEntity(Type type)
+		{
+			List<SQLObject> list = new List<SQLObject> ();
+
+			string sql = "select * from " + GetTableName (type) + ";";
+
+			SqliteCommand command = new SqliteCommand (connection);
+
+			command.CommandText = sql;
+
+			SqliteDataReader reader = command.ExecuteReader ();
+
+			while (reader.Read()) 
+			{
+				SQLObject sender = (SQLObject)type.Assembly.CreateInstance (type.FullName);
+
+				Debug.Log (sender);
+				foreach (PropertyInfo item in type.GetProperties()) 
+				{
+					string name = GetFieldName (item);
+					if (name == null) {
+						continue;
+					}
+
+					string value = reader [name].ToString ();
+
+					if (GetFieldType(item).Equals("integer")) {
+						item.SetValue (sender,int.Parse(value) ,null);
+					}
+					if (GetFieldType(item).Equals("text")) {
+						item.SetValue (sender, value, null);
+					}
+
+					list.Add (sender);
+				}
+			}
+
+			return list.ToArray();
 		}
 	}
 }
