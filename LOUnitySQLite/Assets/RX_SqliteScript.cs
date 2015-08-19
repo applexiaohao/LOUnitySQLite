@@ -3,6 +3,7 @@ using System.Collections;
 
 using Mono.Data.Sqlite;
 using System.Data;
+using AssemblyCSharp;
 
 public class RX_SqliteScript : MonoBehaviour {
 
@@ -113,10 +114,10 @@ public class RX_SqliteScript : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
 	{
-		//调用一下这个函数...
-		OpenDataBase ();
-		//调用一下这个函数...
-		SelectObject ();
+		//打开数据库
+		LOSQLiteTools.OpenDB("xiaohao");
+		//调用函数..
+		LOSQLiteTools.CreateTable (typeof(TestClass));
 	}
 	
 	// Update is called once per frame
