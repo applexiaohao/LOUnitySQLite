@@ -15,6 +15,11 @@ namespace AssemblyCSharp
 	{
 		public string Name{ set; get;}
 		public string Type{ set; get;}
+		public bool IsNotNull{ set; get;}
+		public bool AutoIncrement{set;get;}
+		public bool IsPrimaryKey{set;get;}
+		public string Default{ set; get;}
+		public bool IsUnique{set;get;}
 	}
 
 	[AttributeUsage(AttributeTargets.Class)]
@@ -31,7 +36,7 @@ namespace AssemblyCSharp
 	public class TestClass
 	{
 
-		[SQLField(Name="test_id",Type="integer")]
+		[SQLField(Name="test_id",Type="integer",AutoIncrement=true,IsNotNull=true,IsPrimaryKey=true)]
 		public int 		test_id{set;get;}
 
 		[SQLField(Name="test_name",Type="text")]
@@ -127,6 +132,43 @@ namespace AssemblyCSharp
 		}
 
 		/// <summary>
+		/// 获取创建表格时的Field字符串
+		/// </summary>
+		private static string GetFieldString(PropertyInfo item)
+		{
+			Type att_type = typeof(SQLFieldAttribute);
+			Attribute a = Attribute.GetCustomAttribute (item, att_type);
+
+			if (a == null) {
+				return null;
+			}
+
+			SQLFieldAttribute sfa = (SQLFieldAttribute)a;
+
+			string sql = "";
+			sql += sfa.Name + " ";
+			sql += sfa.Type + " ";
+
+			if (sfa.IsPrimaryKey) {
+				sql += "primary key" + " ";
+			}
+			if (sfa.AutoIncrement) {
+				sql += "autoincrement" + " ";
+			}
+			if (sfa.IsNotNull) {
+				sql += "not null" + " ";
+			}
+			if (sfa.IsUnique) {
+				sql += "unique" + " ";
+			}
+			if (sfa.Default != null) {
+				sql += "default " + sfa.Default;
+			}
+
+			return sql;
+		}
+
+		/// <summary>
 		/// 通过实体类型创建数据库表格
 		/// </summary>
 		public static void CreateTable(Type type)
@@ -143,9 +185,7 @@ namespace AssemblyCSharp
 			foreach (PropertyInfo item in p_list) 
 			{
 				//对应的属性区域
-				string field = GetFieldName (item) + " " + GetFieldType (item);
-
-				field_list += field + ",";
+				field_list += GetFieldString(item) + ",";
 			}
 
 			//删除最后一个,

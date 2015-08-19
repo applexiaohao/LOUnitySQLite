@@ -20,7 +20,7 @@ public class RX_SqliteScript : MonoBehaviour {
 	private void OpenDataBase()
 	{
 		//获取一个数据库文件的路径
-		string path = GetDBPath ("xiaohao");
+		string path = GetDBPath ("good");
 		string c = "Data Source=" + path;
 		//需要通过数据库文件磁盘路径进行初始化
 		connection = new SqliteConnection (c);
@@ -115,7 +115,7 @@ public class RX_SqliteScript : MonoBehaviour {
 	void Start ()
 	{
 		//打开数据库
-		LOSQLiteTools.OpenDB("xiaohao");
+		LOSQLiteTools.OpenDB("good");
 		//调用函数..
 		LOSQLiteTools.CreateTable (typeof(TestClass));
 	}
